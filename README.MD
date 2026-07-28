@@ -312,7 +312,22 @@ Para fins demonstrativos e validação de viabilidade da solução, a tabela aba
 
 ---
 
-## 7. Estrutura de Arquivos
+## 7 — Ciclo de vida MLOps
+
+Para garantir a reprodutibilidade e o acompanhamento dos experimentos da Etapa 3, utilizamos o **MLflow** localmente como ferramenta de controle de versão de Machine Learning. 
+
+Através do MLflow Tracking, registramos sistematicamente cada execução (run) dos algoritmos de Multi-Armed Bandit (Baseline, Thompson Simples e Thompson Contextual). A interface abaixo comprova o log de nossas configurações e resultados:
+
+* **Parâmetros rastreados:** Variáveis de configuração como `n_eventos`, `n_bracos`, `max_lag_dias` e `janela_movel`.
+* **Métricas obtidas:** Resultados mensuráveis de cada rodada, incluindo `conversoes_total`, `taxa_conversao`, `regret_total` e o `uplift_vs_baseline`.
+
+![Dashboard do MLflow com os resultados dos algoritmos](./mlflow/mlflow_results.jpeg)
+
+*Observação: A imagem acima demonstra a UI do MLflow rodando no localhost com o backend SQLite configurado para o projeto.*
+
+---
+
+## 8. Estrutura de Arquivos
 
 ```text
 .
@@ -341,7 +356,7 @@ Para fins demonstrativos e validação de viabilidade da solução, a tabela aba
 
 ---
 
-## 8. Reprodutibilidade
+## 9. Reprodutibilidade
 
 ```bash
 # 1. Instalar dependências
