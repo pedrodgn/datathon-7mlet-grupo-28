@@ -372,3 +372,161 @@ jupyter notebook dados_sinteticos_bandit_contextual.ipynb
 Todos os sorteios usam `SEED = 42` via `numpy.random.default_rng(42)` e `random.seed(42)`.
 
 ---
+
+## 10. Documentação da API - Sistema de Recomendação por Contextual Bandit
+
+Esta API FastAPI foi desenvolvida para servir modelos de **Bandit Contextual (LinUCB / Thompson Sampling)** voltados para a recomendação personalizada de ofertas bancárias e produtos financeiros com base no perfil do cliente.
+
+## 📁 Estrutura do Módulo `api/`
+
+```text
+api/
+├── __init__.py         # Inicialização do pacote Python
+├── main.py             # Instância do FastAPI, middlewares e definição das rotas
+├── bandit.py           # Lógica do algoritmo Contextual Bandit (Policy / Thompson Sampling)
+├── schemas.py          # Schemas de validação Pydantic (Request e Response)
+└── audit_log.py        # Módulo responsável por registrar logs de auditoria e métricas
+```
+
+## 🛠 Libs utilizadas
+- FastAPI: Framework web moderno e de alta performance para construção das APIs.
+
+- Pydantic: Validação de dados e serialização de objetos.
+
+- Uvicorn: Servidor ASGI leve para execução em ambiente de produção e desenvolvimento.
+
+- NumPy / Pandas / Scikit-Learn: Manipulação de vetores de contexto dos clientes e atualização das distribuições das ofertas.
+
+## ⚙️ Configuração e Execução
+#### Pré-requisitos
+- Certifique-se de ter as dependências instaladas (definidas no arquivo requirements.txt na raiz do repositório):
+
+Executando o Servidor Localmente
+```bash
+pip install -r requirements.txt
+```
+
+Na raiz do repositório, execute o seguinte comando:
+```bash
+uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Após iniciar o servidor, acesse a documentação interativa do Swagger UI em:
+
+```
+👉 http://localhost:8000/docs ou http://localhost:8000/redoc
+```
+ 
+## 🛣 Endpoints da API
+
+---
+
+### 1. Root / Boas-vindas
+`GET /`
+
+**Descrição:** Retorna uma mensagem de boas-vindas e confirma o status básico de execução da API.
+
+* **Exemplo de Resposta (`200 OK`)**:
+```json
+{
+  "message": "API de Recomendação com Bandit Contextual está ativa",
+  "status": "healthy"
+}
+```
+
+### 2. Health Check
+`GET /health`
+
+**Descrição:** Verifica a integridade do serviço e se os artefatos do modelo Bandit foram carregados corretamente em memória.
+
+* **Exemplo de Resposta (`200 OK`)**:
+```json
+{
+  "status": "ok",
+  "model_loaded": true
+}
+```
+### 3. Recomendar Oferta
+`POST /recommend`
+
+**Descrição:** Recebe as variáveis contextuais do cliente e seleciona a oferta financeira ideal utilizando o algoritmo Bandit Contextual.
+
+* **Corpo da Requisição (`CustomerContext`)**:
+```json
+{
+  "customer_id": "CLI-12345",
+  "age": 35,
+  "job": "technician",
+  "marital": "married",
+  "education": "university.degree",
+  "default_credit": "no",
+  "housing": "yes",
+  "loan": "no",
+  "channel": "cellular",
+  "month": "may",
+  "day_of_week": "mon"
+}
+```
+- Resposta (RecommendationResponse - 200 OK):
+```json
+{
+  "recommendation_id": "REC-987654321",
+  "customer_id": "CLI-12345",
+  "offer_id": "OFFER_CREDIT_CARD_GOLD",
+  "offer_name": "Cartão de Crédito Gold",
+  "score": 0.8421,
+  "exploration": false
+}
+```
+### 4. Enviar Feedback de Conversão
+`POST /feedback`
+
+**Descrição:** Recebe o resultado da recomendação (recompensa `1.0` em caso de aceite/conversão ou `0.0` em caso de recusa) para atualização contínua dos pesos do Bandit.
+
+* **Corpo da Requisição (`FeedbackRequest`)**:
+```json
+{
+  "recommendation_id": "REC-987654321",
+  "customer_id": "CLI-12345",
+  "offer_id": "OFFER_CREDIT_CARD_GOLD",
+  "reward": 1.0
+}
+```
+
+Resposta (200 OK):
+
+```JSON
+{
+  "status": "success",
+  "message": "Feedback registrado e modelo atualizado com sucesso.",
+  "updated_offer": "OFFER_CREDIT_CARD_GOLD"
+}
+```
+
+## 5. Obter Métricas do Modelo (/metrics)
+
+`Rota: GET /metrics`
+
+- Descrição: Retorna indicadores de desempenho acumulados do algoritmo, tais como número total de recomendações, conversões obtidas, taxa geral de cliques/conversões (CTR) e detalhamento por oferta.
+
+- Exemplo de Resposta (200 OK):
+
+```JSON
+{
+  "total_recommendations": 1250,
+  "total_conversions": 185,
+  "overall_ctr": 0.148,
+  "offers_performance": {
+    "OFFER_CREDIT_CARD_GOLD": {
+      "impressions": 400,
+      "conversions": 80,
+      "ctr": 0.20
+    },
+    "OFFER_PERSONAL_LOAN": {
+      "impressions": 850,
+      "conversions": 105,
+      "ctr": 0.1235
+    }
+  }
+}
+```
